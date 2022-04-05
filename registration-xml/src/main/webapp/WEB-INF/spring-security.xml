@@ -1,0 +1,44 @@
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+ xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+    http://www.springframework.org/schema/security
+    http://www.springframework.org/schema/security/spring-security-4.2.xsd">
+ 
+ <http auto-config="true" use-expressions="true">
+  <intercept-url pattern="/resources/**" access="permitAll" />
+  <intercept-url pattern="/student/profile" access="isAuthenticated()" />
+ <!-- <intercept-url pattern="/student/profile" access="hasRole('ROLE_ADMIN')" /> -->
+ <!-- 
+<form-login login-page="/login" default-target-url="/helloworld"
+   authentication-failure-url="/loginError" />
+  <logout logout-success-url="/" logout-url="/j_spring_security_logout" />
+  <csrf disabled="true" />
+   -->
+   
+   <form-login default-target-url="/student/profile"/>
+   
+       <logout 
+  logout-success-url="/student/home" 
+  logout-url="/perform_logout"
+  delete-cookies="JSESSIONID" />
+  
+ </http>
+ 
+<!--  <authentication-manager>
+  <authentication-provider ref="authentication">
+   <user-service>
+    <user name="java2blog" password="java123" authorities="ROLE_ADMIN" />
+    <user name="arpit" password="arpit123" authorities="ROLE_ADMIN" />
+ 
+   </user-service> 
+  </authentication-provider>
+ </authentication-manager> -->
+ 
+  <authentication-manager>
+      <authentication-provider ref="customAuthenticationProvider "/>
+    </authentication-manager>  
+    
+
+ 
+</beans:beans>
