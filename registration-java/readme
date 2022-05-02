@@ -1,0 +1,88 @@
+<<<<<<<<<<<<<<<<<OVERVIEW>>>>>>>>>>>>>>>>>>>>
+Descirption - Java configuration for Spring MVC
+
+
+
+
+
+
+
+<<<<<<<<<<<<<<<<<Steps>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Steps : To Enable MVC
+1. Create DispatcherServletIntialize extending AbstractAnnotationConfigDispatcherServletInitializer
+to intercept url mapping and configuration files
+1. Create config class annotate with @Configuration 
+2. Annotate with @EnableMvc to support spring mvc features
+3. Configure TemplateResolver, TemplateEngine, ViewResolver for Thymeleaf
+
+******************************************************************************
+Steps : To include static resources
+1. Implement WebMvcConfigure in one of the config file
+2. Overrirde addResources Handler
+3. Implement as registry.addResourceHandler("/resources/**").addResourceLocations("/resources/");
+where first parameter can be any name and second parameter will be path taking webapp as base;
+
+******************************************************************************
+Steps: Hibernate Validation
+1. Within controller use valid annotation and use Binding Reult to check if the object is valid or not
+public String process(@Valid @ModelAttribute('student') Student student,BindingResult result)
+if(result.hasError()) return to same page.
+2. Annotate the entity with required validation ex- @Email,@NotNull, @Pattern, @Size
+3. In the Thymeleaf
+Global Level
+th:if="${#fields.hasGLobalErrors()}" th:each="error: ${#fields.errors('global')}" th:text="${error}"
+Field Level
+th:if="${#fields.hasErrors('name')}" th:errors="*{name}"
+
+
+******************************************************************************
+
+Steps : Custom Validation
+1. Create Annotation [Retention/Target and Constraint(validatedBy class name)] with proper annotation tagging.
+2. provide default message or value function.
+3. Provide defaut groups and payload.
+4. In the validated class implement ConstraintValidator with first parameter as created annotation 
+and second as Object if Target is Type and Data Type if Target is field.
+5. Override intialize and isValid(actual logic)
+
+******************************************************************************
+
+Steps : Custom message for validation
+1. Configure the messageSource (ReloadableResourceBundleMessageResource)
+2. Configure the LocalValidatorFactoryBean to include above configured messageSource
+3. Create message property format can be found while logging BindingResult
+
+******************************************************************************
+Steps :- Hibernate Configuration
+1. List all required parameters in property file like jdbc url, username,passowrd, pool details, hibernate props
+2. In Config file specify property file in @PropertySource("classpath:prop.properties") in main->resource
+3. Enable TransactionalManagement to allow spring to take care of transaction using @Transactional annotation
+4. In Congif File
+-> Create Bean for DataSource where ComboPoolDatasource will be created set required prop for datasource
+-> Create Session Factory as LocalSessionFactoryBean and set datasource, hibernate prop and package to scan
+-> Create HibernateTransactionManager and supply the created session factory in it.
+******************************************************************************
+Steps :- Security Configuration
+1. extends AbstracSecurityWebApplicationIntializer to act as proxy filter for any request
+2. Create a configuration file to put all security related implementation by extending WebSecurityConfigurationAdapter
+3. Overrirde configure methods
+-> One to provide type of authorization provider 
+-> Configure the login logout and url restriction and authorization
+*******************************************************************************
+
+Steps :- Aspect [Seperation of Concerns]
+1. Enable Aspect with annotation @EnableAspectJAutoProxy
+2. Create a class and annotate with @Aspect
+3. Define the pointcut expression 
+Ex- @Pointcut("execution (* com.home.spring.dao.*.*(..))")
+	public void dbAction() {}
+	
+4. Use appropriate Advise like Before around 
+Ex- 	  @Around("dbAction()") public Object aroundLog(ProceedingJoinPoint jp) throws
+	  Throwable{ logger.info("Starting DB Action "+jp.getSignature()); try { Object
+	  result = jp.proceed(); return result; } catch (Exception e) { throw e; } }
+5. When using aspect make sure to return proper object else the caller method will recieve null
+like above return should not be null.
+
+
+
