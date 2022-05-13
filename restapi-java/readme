@@ -1,0 +1,119 @@
+Step1 : Setup
+-> Add Jackson dependency 
+-> Create a dispatcherservletintializer extending the AbstractAnnotationConfigDispatcherServlet
+-> Create Config File with Basic annotation like @EnableWebMvc, @Configuration, @ComponentScan
+
+********************************************************************************
+Step2: Hibernate Configuration
+1. Create persistence property
+2. Create a seperate HibernateConfig class use annotation like @Configuration,@EnableTransactional,@PropertySource
+3. Within the class define 3 beans
+ - DataSource (ComboPoolDataSource) : define db properties as well as pool details
+ - LocalSessionFactory : Define the datasource also the hibernate properties and package to scan
+ - HibernateTransactionManager : Set the sessionfactory
+ 
+ ********************************************************************************
+ Step3: REST Controller
+ 1. Define a class and annotate with @RestController, rest all implementation will be similar to the
+ WebMVC, the json conversion will be OOTB through the Jackson api.
+ 
+ 
+***********************************************************************************
+Step4: Message Sources
+1. Create a message properties, place in webapp => resources -> message.properties
+2. Create a bean as MessageSource and define the basename
+3. Create a bean as ReloadableResourcFactoryBean and define the message source
+
+**************************************************************************************
+Step5: Exception Handling
+1. Create a seperate class as GlobalException and annotate with ControllerAdvice.
+2. Extend with classs ResponseEntityExceptionHandler, ResponseEntityExceptionHandler is a convenient base class for
+ @ControllerAdvice classes that wish to provide centralized exception handling across all 
+ @RequestMapping methods through @ExceptionHandler methods.
+3. Overrirde any in-built exception handling like handleMethodArgumentNotValid
+4. Create any custom exception and create response entity
+Ex-
+@ExceptionHandler(RecordNotFound.class)
+	public ResponseEntity<ErrorResponse> handleNoUserFound(RecordNotFound ex, WebRequest req){
+		... logic
+		return new ResponseEntity<ErrorResponse>(error, HttpStatus.NOT_FOUND);
+	}
+	
+**************************************************************************************
+Step6: Aspect
+1. In the Config class annotate with EnableAutoProxy
+2. Create a class annotate with Aspect and Component
+3. Define Pointcuts
+Ex:-
+@Pointcut("execution (* com.home.spring.restapi.*.*.*(..))")
+	public void startPoint() {};
+	
+4. Log for @Before
+@Before("startPoint() && !logAspect()")
+	public void logStart(JoinPoint jp) {
+		logger.info("Method Invocation :"+jp.getSignature());
+	}
+
+5. Log for @AfterReturning
+@AfterReturning(pointcut = "startPoint() && !logAspect()",returning = "result")
+	public Object logEnd(JoinPoint jp,Object result) {
+		
+		logger.info("Method Invocation Ended for :"+jp.getSignature());
+		return result;
+	}
+
+
+6. Log for @AfterThrowing
+@AfterThrowing(pointcut = "startPoint() && !logAspect()",throwing = "exec")
+	public void logexception(JoinPoint jp,Throwable exec) {
+		logger.warning("Execption at "+jp.getSignature()+" with "+exec.getLocalizedMessage());
+	}
+	
+****************************************************************************
+Steps: Security
+1. Create a SecurityIntializer and extend with AbstractSecurityWebApplicationInitializer
+2. Create SecurityConfig file annotate with @Configuration,@EnableWebSecurity
+3. Extend the class with WebSecurityConfigureAdapter
+4. Override the configure methods
+5. First Configure
+@Override
+	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+		// TODO Auto-generated method stub
+	auth.authenticationProvider(authProvider()); // Custom Authentication that 
+	share the SimpleGrantedAuthority in list
+	
+	}
+
+6.Second Configure Method
+@Override
+	protected void configure(HttpSecurity http) throws Exception {
+
+		http.authorizeRequests()
+		.antMatchers(HttpMethod.GET,"/api/students").hasRole("ADMIN")
+		.antMatchers(HttpMethod.DELETE,"/api/students/**").hasRole("ADMIN")
+		.and()
+		.httpBasic()
+		.and()
+		.csrf().disable()
+		.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+		.and()
+	
+		.exceptionHandling().accessDeniedHandler(accessDeniedHandler());//In case role is not ADMIN
+		.authenticationEntryPoint(customEntryPoint());//In case no auth provided
+
+	}
+
+7. Custom classes will be created implementing the AuthenticationEntryPoint
+and AccessDeniedHandler
+
+ 
+
+
+
+TO_DO
+-> Exception Handling [GLobal,PathVariable]
+-> Hibernate Validation 
+-> DTO, ResponseStatus
+--> Security
+-> Logging
+
